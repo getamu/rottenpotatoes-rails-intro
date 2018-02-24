@@ -12,6 +12,10 @@ class MoviesController < ApplicationController
 
   def index
     @all_ratings=['G','PG','PG-13','R']
+    if @ratings.nil?
+      @ratings={}
+      @all_ratings.each {|i| @ratings[i]=1}
+    end
     if params[:ratings]
       @movies=Movie.where(rating: params[:ratings].keys)
     end
