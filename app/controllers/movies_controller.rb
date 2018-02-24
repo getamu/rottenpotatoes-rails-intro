@@ -12,22 +12,30 @@ class MoviesController < ApplicationController
 
   def index
     @all_ratings=['G','PG','PG-13','R']
-    if @ratings.nil?
-      @ratings={}
-      @all_ratings.each {|i| @ratings[i]=1}
+    @ratings=@all_ratings # default to show all the categories
+    if params[:sort]!=nil
+      session[:sort]=params[:sort] # new settings being remembered
     end
-    if params[:ratings]
-      @movies=Movie.where(rating: params[:ratings].keys)
+    if params[:ratings]!=nil
+      @movies=Movie.where(rating: params[:ratings].keys).order(session[:sort])
+      session[:ratings]=params[:ratings]
+      @ratings=params[:ratings].keys
+    elsif session[:ratings]!=nil
+      @movies=Movie.where(rating: session[:ratings].keys).order(session[:sort])
+      @ratings=session[:ratings].keys
+    else
+      @movies=Movie.all.order(session[:sort])
     end
-    if params[:sort]=='title'
-      @movies = Movie.order('title ASC')
+    
+    if session[:sort]=='title'
       @movie_title_hilite='hilite'
-    elsif params[:sort]=='release'
-      @movies = Movie.order('release_date ASC') 
+    elsif session[:sort]=='release_date'
+      #@movies=Movie.order('release_date')
       @release_hilite='hilite'
-    else 
-      params[:ratings] ? @movies=Movie.where(rating: params[:ratings].keys): 
-                         @movies=Movie.all
+    end
+    if (params[:sort] == nil or params[:ratings] == nil) and session[:sort] and session[:ratings]
+      flash.keep
+      redirect_to movies_path(:sort => session[:sort], :ratings => session[:ratings])
     end
   end
 
